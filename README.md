@@ -1,6 +1,7 @@
-# Project Title
+# Investigating and Scaling up Code-Switching for Multilingual Language Model Pre-Training
+This repository contains the code for our Paper: 
 
-Investigating and Scaling up Code-Switching for Multilingual Language Model Pre-Training
+[Investigating and Scaling up Code-Switching for Multilingual Language Model Pre-Training](https://arxiv.org/abs/2504.01801)
 
 # Code-Switching Data Synthesis
 
