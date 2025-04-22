@@ -4,7 +4,7 @@ llm_path= #pretrained model path
 output_path= #output model path
 
 export HF_DATASETS_CACHE=$root/hfcache
-deepspeed --include localhost:0,1,2,3,4,5,6,7 --master_port=9901 $root/SynCS/train.py \
+deepspeed --include localhost:0,1,2,3,4,5,6,7 --master_port=9901 $root/train.py \
     --dataset_name $data_path \
     --preprocessing_num_workers 16 \
     --exp sft \

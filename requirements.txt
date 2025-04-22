@@ -1,0 +1,7 @@
+deepspeed==0.15.4
+transformers
+accelerate
+datasets
+flash-attn
+numpy
+pandas

@@ -42,7 +42,7 @@ from transformers import (
 from transformers.trainer_utils import get_last_checkpoint
 from transformers.utils import send_example_telemetry
 
-from src.data_utils import preprocess_enclone_text, enclone_collator, preprocess_pretrain_data, CodeSwitchCollator, preprocess_sft_data, sft_collator, load_codeswitch_table
+from src.data_utils import preprocess_pretrain_data, preprocess_sft_data, sft_collator, load_codeswitch_table
 from src.model_utils import setup_model_and_tokenizer
 from src.args.parse_args import ModelArguments, DataTrainingArguments
 from src.model_utils import count_parameters
@@ -118,25 +118,13 @@ def main():
 
     model, tokenizer = setup_model_and_tokenizer(model_args, training_args)
     
-    if model_args.exp in ['sft', 'sft-lora']:
+    if model_args.exp in ['sft']:
         dataset = preprocess_sft_data(tokenizer, data_args, training_args)
         collator_fn = partial(sft_collator, tokenizer)
         log_sample = dataset[0]
         print("input_ids: {}".format(tokenizer.decode(log_sample['prompt_ids'], skip_special_tokens=False)))
         label_ids = [k for k in log_sample['label_ids'] if k != -100]
         print("labels: {}".format(tokenizer.decode(label_ids, skip_special_tokens=False)))
-    elif 'enclone' in model_args.exp:
-        dataset = preprocess_enclone_text(tokenizer, data_args, training_args)
-        collator_fn = partial(enclone_collator, tokenizer, model_args)
-    else:
-        dataset = preprocess_pretrain_data(tokenizer, data_args, training_args)
-        if model_args.codeswitch_ratio is None:
-            collator_fn = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
-        else:
-            cs_table = load_codeswitch_table(data_args, tokenizer)
-            collator_fn = CodeSwitchCollator(tokenizer=tokenizer,
-                                             codeswitch_ratio=model_args.codeswitch_ratio,
-                                             codeswitch_table=cs_table)
 
     logger.info(dataset)
     trainable_params, all_param = count_parameters(model)
