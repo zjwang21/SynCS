@@ -7,49 +7,6 @@ from ..utils.logging_utils import get_logger
 
 logger = get_logger(__name__)
 
-def preprocess_enclone_text(tokenizer, data_args, training_args):
-    #dataset = []
-    #for file in os.listdir(data_args.dataset_name):
-    #    dataset.append(load_dataset("parquet", data_files=os.path.join(data_args.dataset_name, file))['train'])
-    dataset = load_dataset("parquet", data_files=data_args.dataset_name)['train']
-    #dataset = dataset.select(range(50000))
-
-    tokenizer_func = tokenizer
-    def tokenize_data(examples):
-        text_examples = [k + tokenizer.eos_token for k in examples["text"]]
-        ids =  tokenizer_func(text_examples, add_special_tokens=False).input_ids
-        return {"input_ids": ids}
-    
-    with training_args.main_process_first(desc="dataset map tokenization"):
-        tokenized_dataset = dataset.map(tokenize_data, 
-                                        num_proc=data_args.preprocessing_num_workers,
-                                        remove_columns=dataset.column_names,
-                                        batched=True)
-
-    def group_texts(examples):
-        # Concatenate all texts.
-        concatenated_examples = {k: list(chain(*examples[k])) for k in examples.keys()}
-        total_length = len(concatenated_examples[list(examples.keys())[0]])
-        # We drop the small remainder, and if the total_length < block_size  we exclude this batch and return an empty dict.
-        # We could add padding if the model supported it instead of this drop, you can customize this part to your needs.
-        total_length = (total_length // data_args.seq_length) * data_args.seq_length
-        # Split by chunks of max_len.
-        result = {
-            k: [t[i : i + data_args.seq_length] for i in range(0, total_length, data_args.seq_length)]
-            for k, t in concatenated_examples.items()
-        }
-        result["labels"] = result["input_ids"].copy()
-        return result
-    
-    logger.info(tokenized_dataset)
-    with training_args.main_process_first(desc="dataset groups"):
-        tokenized_dataset = tokenized_dataset.map(group_texts, 
-                                        num_proc=data_args.preprocessing_num_workers,
-                                        batched=True)
-        
-    dataset = tokenized_dataset
-    return dataset
-
 def preprocess_pretrain_data(tokenizer , data_args, training_args):
     if data_args.cache_path is not None:
         cache_paths = data_args.cache_path.split(",")
@@ -131,7 +88,6 @@ def preprocess_pretrain_data(tokenizer , data_args, training_args):
     logger.info(tokenized_dataset)
     dataset = tokenized_dataset
     return dataset
-
 
 def preprocess_sft_data(tokenizer , data_args, training_args):
     dataset = load_dataset("json", data_files=data_args.dataset_name)['train']
